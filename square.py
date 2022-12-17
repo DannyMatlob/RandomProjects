@@ -21,6 +21,11 @@ def merge_squares(square1, square2):
     other_x1, other_y1, other_x2, other_y2 = canvas.coords(square2)
     color = canvas.itemcget(square1, 'fill')
 
+    """color1 = canvas.itemcget(square1, 'fill')
+    color2 = canvas.itemcget(square2, 'fill')
+    print("Merging squares", color1, color2)"""
+    
+
     # Delete the squares that need to be deleted
     canvas.delete(square1)
     canvas.delete(square2)
@@ -30,6 +35,7 @@ def merge_squares(square1, square2):
     draw_square(x1, y1, color, newSize)
 
 def update_squares():
+    mergeBreakFlag = False
     # Get a list of all the squares on the canvas
     squares = canvas.find_all()
 
@@ -37,27 +43,39 @@ def update_squares():
     squares_to_delete = []
 
     # Update the position of each square
+    # Calculate the new position of the square, applying gravitational forces from the other squares
+    acceleration_x = 0
+    acceleration_y = 0
+
     for square in squares:
+        if (mergeBreakFlag==True):
+            mergeBreakFlag = False
+            break
         # Get the current position of the square
         if (len(canvas.find_withtag(square)) > 0):
             x1, y1, x2, y2 = canvas.coords(square)
         else:
             continue
 
-        # Calculate the new position of the square, applying gravitational forces from the other squares
-        acceleration_x = 0
-        acceleration_y = 0
         for other_square in squares:
             if other_square == square:
                 continue
             if not canvas.find_withtag(other_square):
                 continue
+
+            color1 = canvas.itemcget(square, 'fill')
+            color2 = canvas.itemcget(other_square, 'fill')
+
             other_x1, other_y1, other_x2, other_y2 = canvas.coords(other_square)
             distance = math.sqrt((other_x1-x1)**2 + (other_y1-y1)**2)
             #If two squares are within 5 pixels then we should consider them colliding
             if distance <= 20:
+                #DEBUG
+                print("Merging squares", square, color1 ,",", other_square,color2)
+
                  # The squares are colliding, add them to the list of squares to delete
                 merge_squares(square,other_square)
+                mergeBreakFlag = True
                 break
             mass1 = x2-x1
             mass2 = other_x2-other_x1
@@ -79,7 +97,7 @@ def update_squares():
             draw_square(x1, y1, color, (x2-x1))
 
     # Schedule the update_squares function to be called again in 50 milliseconds
-    window.after(2, update_squares)
+    window.after(100, update_squares)
 
 # Define a function to draw a rainbow square on the canvas when the left mouse button is held down
 def draw_on_click(event):
